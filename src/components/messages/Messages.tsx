@@ -12,6 +12,7 @@ import {
   Package,
   Briefcase,
   Clock,
+  ChevronLeft,
 } from "lucide-react";
 
 interface Message {
@@ -195,9 +196,13 @@ export const Messages = () => {
   const conversationMessages = selectedConversation ? messages[selectedConversation] || [] : [];
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] bg-background">
+    <div className="flex h-full bg-background overflow-hidden relative">
       {/* Conversations List */}
-      <div className="w-80 border-r border-border flex flex-col">
+      <div 
+        className={`w-full lg:w-80 border-r border-border flex-col ${
+          selectedConversation ? "hidden lg:flex" : "flex"
+        }`}
+      >
         <div className="p-4 border-b border-border">
           <h1 className="text-2xl font-bold mb-4">Messages</h1>
           <div className="relative">
@@ -227,7 +232,7 @@ export const Messages = () => {
                 >
                   <CardContent className="p-3">
                     <div className="flex items-start space-x-3">
-                      <div className="relative">
+                      <div className="relative shrink-0">
                         <Avatar className="w-12 h-12">
                           <AvatarImage src={conversation.participant.avatar} />
                           <AvatarFallback>
@@ -241,14 +246,14 @@ export const Messages = () => {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-semibold truncate">{conversation.participant.name}</h4>
-                          <div className="flex items-center space-x-2">
+                          <h4 className="font-semibold truncate pr-2">{conversation.participant.name}</h4>
+                          <div className="flex items-center space-x-2 shrink-0">
                             {conversation.unreadCount > 0 && (
-                              <Badge className="bg-destructive text-destructive-foreground">
+                              <Badge className="bg-destructive text-destructive-foreground px-1 min-w-[1.25rem] text-center">
                                 {conversation.unreadCount}
                               </Badge>
                             )}
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
                               {conversation.lastMessageTime}
                             </span>
                           </div>
@@ -258,7 +263,7 @@ export const Messages = () => {
                           {conversation.lastMessage}
                         </p>
                         
-                        <div className="flex items-center space-x-2 mt-2">
+                        <div className="flex items-center space-x-2 mt-2 truncate">
                           <Badge className={typeColors[conversation.type]} variant="secondary">
                             <TypeIcon className="w-3 h-3 mr-1" />
                             {conversation.type}
@@ -281,14 +286,26 @@ export const Messages = () => {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div 
+        className={`flex-1 flex-col min-w-0 ${
+          !selectedConversation ? "hidden lg:flex" : "flex"
+        }`}
+      >
         {selectedConv ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b border-border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
+            <div className="p-4 border-b border-border bg-card z-10 flex shrink-0">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center space-x-3 min-w-0">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="lg:hidden shrink-0 -ml-2"
+                    onClick={() => setSelectedConversation(null)}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </Button>
+                  <div className="relative shrink-0">
                     <Avatar className="w-10 h-10">
                       <AvatarImage src={selectedConv.participant.avatar} />
                       <AvatarFallback>
@@ -299,37 +316,37 @@ export const Messages = () => {
                       <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border border-background"></div>
                     )}
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{selectedConv.participant.name}</h3>
-                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <span>{selectedConv.participant.isOnline ? "Online" : "Offline"}</span>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold truncate">{selectedConv.participant.name}</h3>
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground truncate">
+                      <span className="shrink-0">{selectedConv.participant.isOnline ? "Online" : "Offline"}</span>
                       {selectedConv.relatedItem && (
                         <>
-                          <span>•</span>
-                          <span>{selectedConv.relatedItem.title}</span>
+                          <span className="shrink-0">•</span>
+                          <span className="truncate">{selectedConv.relatedItem.title}</span>
                         </>
                       )}
                     </div>
                   </div>
                 </div>
                 
-                <Button variant="ghost" size="sm">
-                  <MoreVertical className="w-4 h-4" />
+                <Button variant="ghost" size="icon" className="shrink-0 ml-2">
+                  <MoreVertical className="w-5 h-5" />
                 </Button>
               </div>
             </div>
 
             {/* Messages */}
             <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {conversationMessages.map((message) => (
                   <div
                     key={message.id}
                     className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
                   >
-                    <div className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${message.isOwn ? "flex-row-reverse space-x-reverse" : ""}`}>
+                    <div className={`flex items-end space-x-2 max-w-[85%] lg:max-w-[70%] ${message.isOwn ? "flex-row-reverse space-x-reverse" : ""}`}>
                       {!message.isOwn && (
-                        <Avatar className="w-8 h-8">
+                        <Avatar className="w-8 h-8 shrink-0 mb-1">
                           <AvatarImage src={selectedConv.participant.avatar} />
                           <AvatarFallback className="text-xs">
                             {selectedConv.participant.name.split(" ").map(n => n[0]).join("")}
@@ -337,17 +354,17 @@ export const Messages = () => {
                         </Avatar>
                       )}
                       
-                      <div className={`rounded-lg px-3 py-2 ${
+                      <div className={`rounded-2xl px-4 py-2 flex flex-col ${
                         message.isOwn 
-                          ? "bg-primary text-primary-foreground" 
-                          : "bg-muted"
+                          ? "bg-primary text-primary-foreground rounded-br-sm" 
+                          : "bg-muted rounded-bl-sm"
                       }`}>
-                        <p className="text-sm">{message.content}</p>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
                         <div className={`flex items-center space-x-1 mt-1 ${
                           message.isOwn ? "justify-end" : "justify-start"
                         }`}>
                           <Clock className="w-3 h-3 opacity-70" />
-                          <span className={`text-xs opacity-70`}>
+                          <span className={`text-[10px] opacity-70 font-medium tracking-wide uppercase`}>
                             {message.timestamp}
                           </span>
                         </div>
@@ -359,16 +376,20 @@ export const Messages = () => {
             </ScrollArea>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-border">
-              <div className="flex space-x-2">
+            <div className="p-4 border-t border-border bg-card shrink-0">
+              <div className="flex space-x-2 items-center max-w-4xl mx-auto">
                 <Input
                   placeholder="Type a message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                  className="flex-1"
+                  className="flex-1 rounded-full bg-muted/50 border-transparent focus-visible:bg-background"
                 />
-                <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
+                <Button 
+                  onClick={handleSendMessage} 
+                  disabled={!newMessage.trim()}
+                  className="rounded-full shrink-0 h-10 w-10 p-0"
+                >
                   <Send className="w-4 h-4" />
                   <span className="sr-only">Send message</span>
                 </Button>
@@ -376,14 +397,14 @@ export const Messages = () => {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <Send className="w-12 h-12 text-muted-foreground" />
+          <div className="flex-1 flex items-center justify-center bg-muted/10">
+            <div className="text-center p-8 max-w-sm">
+              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <MessageCircle className="w-10 h-10 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">No conversation selected</h3>
-              <p className="text-muted-foreground">
-                Choose a conversation from the list to start chatting.
+              <h3 className="text-xl font-semibold mb-2">Your Messages</h3>
+              <p className="text-muted-foreground text-sm">
+                Select a conversation from the sidebar to view messages, or start a new chat to connect with your neighbors.
               </p>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,9 +32,24 @@ import {
     Car,
     Baby,
     Dog,
-    Wifi
+    Wifi,
+    List,
+    ChevronLeft,
+    ChevronRight,
+    Filter
 } from "lucide-react";
-import { format } from "date-fns";
+import { 
+    format, 
+    startOfMonth, 
+    endOfMonth, 
+    startOfWeek, 
+    endOfWeek, 
+    eachDayOfInterval, 
+    isSameMonth, 
+    isSameDay, 
+    addMonths, 
+    subMonths 
+} from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 interface Event {
@@ -87,6 +102,8 @@ export const EventPlanning = () => {
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
     const [showCreateEvent, setShowCreateEvent] = useState(false);
     const [showEventDetails, setShowEventDetails] = useState(false);
+    const [viewMode, setViewMode] = useState<'list' | 'calendar'>('calendar');
+    const [currentDate, setCurrentDate] = useState(new Date());
     const [eventTitle, setEventTitle] = useState("");
     const [eventDescription, setEventDescription] = useState("");
     const [eventCategory, setEventCategory] = useState<Event['category']>('community');
@@ -341,9 +358,9 @@ export const EventPlanning = () => {
             case 'community': return <Users className="w-4 h-4" />;
             case 'business': return <DollarSign className="w-4 h-4" />;
             case 'social': return <Music className="w-4 h-4" />;
-            case 'educational': return <Calendar className="w-4 h-4" />;
+            case 'educational': return <CalendarIcon className="w-4 h-4" />;
             case 'charity': return <CheckCircle className="w-4 h-4" />;
-            default: return <Calendar className="w-4 h-4" />;
+            default: return <CalendarIcon className="w-4 h-4" />;
         }
     };
 
@@ -381,8 +398,19 @@ export const EventPlanning = () => {
         }
     };
 
+    // Calendar calculations
+    const calendarDays = useMemo(() => {
+        const monthStart = startOfMonth(currentDate);
+        const monthEnd = endOfMonth(monthStart);
+        const startDate = startOfWeek(monthStart);
+        const endDate = endOfWeek(monthEnd);
+        return eachDayOfInterval({ start: startDate, end: endDate });
+    }, [currentDate]);
+
+    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 flex flex-col h-full min-h-[calc(100vh-6rem)]">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
@@ -609,115 +637,147 @@ export const EventPlanning = () => {
                 </Dialog>
             </div>
 
-            {/* Events List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {events.map(event => (
-                    <Card key={event.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center space-x-2">
-                                    {getCategoryIcon(event.category)}
-                                    <Badge className={getCategoryColor(event.category)}>
-                                        {event.category}
-                                    </Badge>
-                                </div>
-                                <div className={`w-3 h-3 rounded-full ${getStatusColor(event.status)}`}></div>
-                            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-2 rounded-lg border border-border">
+                <div className="flex items-center space-x-1 bg-muted/50 p-1 rounded-md">
+                    <Button 
+                        variant={viewMode === 'list' ? 'secondary' : 'ghost'} 
+                        size="sm" 
+                        onClick={() => setViewMode('list')} 
+                        className="h-8"
+                    >
+                        <List className="w-4 h-4 mr-2" /> List
+                    </Button>
+                    <Button 
+                        variant={viewMode === 'calendar' ? 'secondary' : 'ghost'} 
+                        size="sm" 
+                        onClick={() => setViewMode('calendar')} 
+                        className="h-8"
+                    >
+                        <CalendarIcon className="w-4 h-4 mr-2" /> Calendar
+                    </Button>
+                </div>
+                
+                {viewMode === 'calendar' && (
+                    <div className="flex items-center space-x-2 sm:space-x-4">
+                        <Button variant="outline" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))} className="h-8 w-8">
+                            <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <h3 className="text-sm sm:text-base font-semibold min-w-[120px] text-center">
+                            {format(currentDate, "MMMM yyyy")}
+                        </h3>
+                        <Button variant="outline" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))} className="h-8 w-8">
+                            <ChevronRight className="w-4 h-4" />
+                        </Button>
+                    </div>
+                )}
+            </div>
 
-                            <h4 className="font-semibold mb-2">{event.title}</h4>
-                            <p className="text-sm text-muted-foreground mb-3">{event.description}</p>
+            {/* View Area */}
+            <div className="flex-1 min-h-0 pb-4">
+                {viewMode === 'list' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {events.map(event => (
+                            <Card key={event.id} className="cursor-pointer hover:shadow-md transition-all duration-200 border-border/50 group flex flex-col h-full">
+                                <CardContent className="p-5 flex flex-col flex-1">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center space-x-2">
+                                            <div className={`p-2 rounded-lg ${getCategoryColor(event.category).replace('text-', 'bg-').replace('-800', '-100')} text-foreground`}>
+                                                {getCategoryIcon(event.category)}
+                                            </div>
+                                            <Badge variant="secondary" className="font-normal capitalize">
+                                                {event.category}
+                                            </Badge>
+                                        </div>
+                                        <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${getStatusColor(event.status)}`}></div>
+                                    </div>
 
-                            <div className="flex items-center space-x-4 mb-3">
-                                <div className="flex items-center space-x-1">
-                                    <Avatar className="w-6 h-6">
-                                        <AvatarImage src={event.organizerAvatar} />
-                                        <AvatarFallback>{event.organizerName[0]}</AvatarFallback>
-                                    </Avatar>
-                                    <span className="text-sm">{event.organizerName}</span>
-                                </div>
-                                <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                                    <MapPin className="w-3 h-3" />
-                                    <span>{event.location}</span>
-                                </div>
-                            </div>
+                                    <h4 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-1">{event.title}</h4>
+                                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2 flex-1">{event.description}</p>
 
-                            <div className="space-y-2 mb-3">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span>Capacity</span>
-                                    <span className="font-medium">{event.currentAttendees}/{event.capacity}</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div
-                                        className="bg-blue-600 h-2 rounded-full"
-                                        style={{ width: `${(event.currentAttendees / event.capacity) * 100}%` }}
-                                    ></div>
-                                </div>
-                            </div>
+                                    <div className="space-y-3 mb-4">
+                                        <div className="flex items-center space-x-3 text-sm">
+                                            <CalendarIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                                            <span className="truncate">{format(event.startDate, "MMM dd, yyyy")} • {format(event.startDate, "h:mm a")}</span>
+                                        </div>
+                                        <div className="flex items-center space-x-3 text-sm">
+                                            <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                                            <span className="truncate">{event.location}</span>
+                                        </div>
+                                        <div className="flex items-center space-x-3 text-sm">
+                                            <Users className="w-4 h-4 text-muted-foreground shrink-0" />
+                                            <span>{event.currentAttendees} / {event.capacity} attending</span>
+                                        </div>
+                                    </div>
 
-                            <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                                <div className="flex items-center space-x-1">
-                                    <Calendar className="w-3 h-3" />
-                                    <span>{format(event.startDate, "MMM dd")}</span>
+                                    <div className="mt-auto pt-4 border-t border-border/50 flex space-x-2">
+                                        <Button
+                                            variant="secondary"
+                                            className="flex-1"
+                                            onClick={() => setSelectedEvent(event)}
+                                        >
+                                            View Details
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col h-[800px] max-h-[calc(100vh-16rem)]">
+                        {/* Days Header */}
+                        <div className="grid grid-cols-7 border-b border-border bg-muted/30">
+                            {weekdays.map(day => (
+                                <div key={day} className="py-2 sm:py-3 text-center text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                                    <span className="hidden sm:inline">{day}</span>
+                                    <span className="sm:hidden">{day.charAt(0)}</span>
                                 </div>
-                                <div className="flex items-center space-x-1">
-                                    <Clock className="w-3 h-3" />
-                                    <span>{format(event.startDate, "HH:mm")}</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                    {event.isFree ? (
-                                        <span className="text-green-600 font-medium">Free</span>
-                                    ) : (
-                                        <span className="font-medium">${event.price}</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {event.amenities.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mb-3">
-                                    {event.amenities.slice(0, 3).map(amenity => (
-                                        <Badge key={amenity} variant="outline" className="text-xs">
-                                            {getAmenityIcon(amenity)}
-                                            <span className="ml-1">{amenity}</span>
-                                        </Badge>
-                                    ))}
-                                    {event.amenities.length > 3 && (
-                                        <Badge variant="outline" className="text-xs">
-                                            +{event.amenities.length - 3} more
-                                        </Badge>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="flex space-x-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setSelectedEvent(event)}
-                                    className="flex-1"
-                                >
-                                    View Details
-                                </Button>
-                                {event.status === 'draft' && (
-                                    <Button
-                                        size="sm"
-                                        onClick={() => handlePublishEvent(event.id)}
+                            ))}
+                        </div>
+                        {/* Calendar Grid */}
+                        <div className="grid grid-cols-7 auto-rows-fr flex-1 overflow-y-auto">
+                            {calendarDays.map((day, dayIdx) => {
+                                const dayEvents = events.filter(e => isSameDay(e.startDate, day));
+                                const isCurrentMonth = isSameMonth(day, monthStart);
+                                const isToday = isSameDay(day, new Date());
+                                
+                                return (
+                                    <div 
+                                        key={day.toString()} 
+                                        className={`min-h-[100px] sm:min-h-[120px] p-1 sm:p-2 border-b border-r border-border flex flex-col transition-colors ${
+                                            !isCurrentMonth ? 'bg-muted/10 text-muted-foreground/50' : 'hover:bg-muted/5'
+                                        } ${dayIdx % 7 === 6 ? 'border-r-0' : ''}`}
                                     >
-                                        Publish
-                                    </Button>
-                                )}
-                                {event.status === 'published' && (
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => handleCancelEvent(event.id)}
-                                    >
-                                        Cancel
-                                    </Button>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                                        <div className="flex justify-between items-start mb-1 sm:mb-2">
+                                            <span className={`text-xs sm:text-sm font-medium w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full ${
+                                                isToday ? 'bg-primary text-primary-foreground shadow-sm' : ''
+                                            }`}>
+                                                {format(day, "d")}
+                                            </span>
+                                            {dayEvents.length > 0 && (
+                                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 sm:hidden">
+                                                    {dayEvents.length}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                            {dayEvents.map(event => (
+                                                <div 
+                                                    key={event.id}
+                                                    onClick={() => setSelectedEvent(event)}
+                                                    className={`text-[10px] sm:text-xs p-1 sm:px-2 sm:py-1.5 rounded truncate cursor-pointer hover:opacity-80 transition-opacity border border-transparent hover:border-border/50 ${getCategoryColor(event.category)}`}
+                                                    title={event.title}
+                                                >
+                                                    <span className="font-semibold mr-1 hidden sm:inline">{format(event.startDate, "HH:mm")}</span>
+                                                    {event.title}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Event Details */}
@@ -747,7 +807,7 @@ export const EventPlanning = () => {
                                     <h4 className="font-semibold mb-2">Event Details</h4>
                                     <div className="space-y-2 text-sm">
                                         <div className="flex items-center space-x-2">
-                                            <Calendar className="w-4 h-4" />
+                                            <CalendarIcon className="w-4 h-4" />
                                             <span>{format(selectedEvent.startDate, "PPP 'at' HH:mm")}</span>
                                         </div>
                                         <div className="flex items-center space-x-2">

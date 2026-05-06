@@ -30,7 +30,7 @@ const Index = () => {
     });
   };
 
-  const handleRegister = (data: any) => {
+  const handleRegister = (data: Record<string, string>) => {
     // In a real app, this would create a new user account
     setIsAuthenticated(true);
     setShowAuthModal(false);
@@ -97,8 +97,8 @@ const Index = () => {
         onToggleBusiness={handleToggleBusiness}
       />
 
-      <main className={`pt-4 ${currentPage === "messages" ? "" : "lg:ml-64"}`}>
-        <div className={`${currentPage === "messages" ? "" : "container mx-auto px-4 pb-20 lg:pb-4"}`}>
+      <main className={`lg:ml-64 flex flex-col ${currentPage === "messages" ? "h-[calc(100dvh-4rem)]" : "min-h-[calc(100dvh-4rem)]"}`}>
+        <div className={`${currentPage === "messages" ? "flex-1 overflow-hidden pb-16 lg:pb-0" : "container mx-auto px-4 py-4 pb-20 lg:pb-4"} flex flex-col`}>
           {renderPage()}
         </div>
       </main>

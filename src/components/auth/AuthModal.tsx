@@ -11,7 +11,7 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLogin: (email: string, password: string) => void;
-  onRegister: (data: any) => void;
+  onRegister: (data: Record<string, string>) => void;
 }
 
 export const AuthModal = ({ isOpen, onClose, onLogin, onRegister }: AuthModalProps) => {

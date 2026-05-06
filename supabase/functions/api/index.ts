@@ -8,14 +8,14 @@ const corsHeaders = {
 interface Database {
   public: {
     Tables: {
-      profiles: any
-      posts: any
-      comments: any
-      marketplace_items: any
-      services: any
-      bookings: any
-      messages: any
-      business_profiles: any
+      profiles: Record<string, unknown>
+      posts: Record<string, unknown>
+      comments: Record<string, unknown>
+      marketplace_items: Record<string, unknown>
+      services: Record<string, unknown>
+      bookings: Record<string, unknown>
+      messages: Record<string, unknown>
+      business_profiles: Record<string, unknown>
     }
   }
 }
@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    if (path.match(/^\/posts\/[^\/]+\/like$/) && method === 'POST') {
+    if (path.match(new RegExp('^/posts/[^/]+/like$')) && method === 'POST') {
       const postId = path.split('/')[2]
       
       const { data: post, error: fetchError } = await supabaseClient
@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    if (path.match(/^\/posts\/[^\/]+\/comments$/) && method === 'GET') {
+    if (path.match(new RegExp('^/posts/[^/]+/comments$')) && method === 'GET') {
       const postId = path.split('/')[2]
       
       const { data, error } = await supabaseClient
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    if (path.match(/^\/posts\/[^\/]+\/comments$/) && method === 'POST') {
+    if (path.match(new RegExp('^/posts/[^/]+/comments$')) && method === 'POST') {
       const postId = path.split('/')[2]
       const { content } = await req.json()
       const { data: { user } } = await supabaseClient.auth.getUser()
@@ -231,7 +231,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    if (path.match(/^\/marketplace\/[^\/]+$/) && method === 'GET') {
+    if (path.match(new RegExp('^/marketplace/[^/]+$')) && method === 'GET') {
       const itemId = path.split('/')[2]
       
       const { data, error } = await supabaseClient
@@ -324,7 +324,7 @@ Deno.serve(async (req) => {
     }
 
     // Messages endpoints
-    if (path.match(/^\/messages\/[^\/]+$/) && method === 'GET') {
+    if (path.match(new RegExp('^/messages/[^/]+$')) && method === 'GET') {
       const itemId = path.split('/')[2]
       const { data: { user } } = await supabaseClient.auth.getUser()
       

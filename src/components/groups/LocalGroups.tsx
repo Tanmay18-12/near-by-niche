@@ -290,7 +290,7 @@ export const LocalGroups = () => {
     const getCategoryIcon = (category: Group['category']) => {
         switch (category) {
             case 'parents': return <Baby className="w-4 h-4" />;
-            case 'fitness': return <Running className="w-4 h-4" />;
+            case 'fitness': return <Activity className="w-4 h-4" />;
             case 'hobbies': return <BookOpen className="w-4 h-4" />;
             case 'business': return <Users className="w-4 h-4" />;
             case 'social': return <Users className="w-4 h-4" />;
